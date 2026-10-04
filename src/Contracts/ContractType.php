@@ -28,6 +28,7 @@ interface ContractType
     /**
      * Invoice lines for the period that starts on $period, in journal's items[] shape:
      * [['concept' => ..., 'quantity' => 1, 'price' => ..., 'amount' => ..., 'taxes' => []], ...]
+     * Return [] when there is nothing to bill: the period advances without an invoice.
      */
     public function invoiceLines(Contract $contract, Carbon $period): array;
 

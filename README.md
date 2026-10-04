@@ -23,6 +23,7 @@ Register the app's contract types in `config/agreements.php`:
 
 A type implements `Insane\Agreements\Contracts\ContractType` (or extends `Types\BaseContractType`):
 validation of `meta_data`, allowed relation roles, and the invoice lines for a period.
+Returning no lines (e.g. an hourly contract with no hours in the period) advances the cycle without an invoice.
 
 ## Billing
 

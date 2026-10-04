@@ -54,12 +54,11 @@ trait HasContractBilling
         $created = collect();
         $max = (int) config('agreements.max_catch_up', 24);
 
-        while ($created->count() < $max && $this->isDue($today)) {
-            $invoice = $this->generateNextInvoice();
-            if (! $invoice) {
-                break;
+        // Each pass advances next_invoice_date, so the loop always ends; empty periods create nothing.
+        for ($i = 0; $i < $max && $this->isDue($today); $i++) {
+            if ($invoice = $this->generateNextInvoice()) {
+                $created->push($invoice);
             }
-            $created->push($invoice);
         }
 
         return $created;
@@ -74,9 +73,11 @@ trait HasContractBilling
         return DB::transaction(function () use ($period, $key, $generated) {
             $invoice = null;
 
-            if (! in_array($key, $generated, true)) {
-                $type = $this->contractType();
-                $items = $type->invoiceLines($this, $period);
+            $type = $this->contractType();
+            $items = in_array($key, $generated, true) ? [] : $type->invoiceLines($this, $period);
+
+            // A period with nothing to bill (e.g. no hours logged on an hourly contract) just advances.
+            if ($items) {
                 $total = round(array_sum(array_column($items, 'amount')), 2);
 
                 $invoice = Invoice::createDocument([
